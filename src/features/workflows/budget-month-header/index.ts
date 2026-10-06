@@ -101,14 +101,16 @@ function sync(): void {
 
 export const budgetMonthHeader = defineSetting({
 	type: "checkbox",
-	label: "Month header (experimental)",
-	description:
-		"Replace the budget page's month strip with a header: a month picker, months-shown control, and Today.",
+	label: "Budget toolbar",
+	description: "Use a labeled month toolbar with comparison controls and budget actions.",
 	icon: "calendar",
 	group: "Budget",
 	context: {
-		key: "budget-month-header",
-		defaultValue: false,
+		// The redesigned toolbar replaces the former experimental layout. A new key
+		// lets the new default take effect even for extensions that saved the old
+		// feature as disabled; users can still turn this version off in Settings.
+		key: "budget-month-header-v2",
+		defaultValue: true,
 	},
 	css: () => `
 		[${NATIVE_HEADER_ATTR}], [${NATIVE_COUNT_ATTR}] { display: none !important; }

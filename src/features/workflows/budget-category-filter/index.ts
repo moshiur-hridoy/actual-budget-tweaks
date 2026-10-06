@@ -291,14 +291,16 @@ function sync(): void {
 
 export const budgetCategoryFilter = defineSetting({
 	type: "checkbox",
-	label: "Category filter (experimental)",
+	label: "Category status filter",
 	description:
 		"Filter the budget table to categories that need attention (overspent or short of their target) or are funded.",
 	icon: "filter",
 	group: "Budget",
 	context: {
-		key: "budget-category-filter",
-		defaultValue: false,
+		// The filter lives in the redesigned toolbar, so enable its new placement
+		// independently of the old saved preference.
+		key: "budget-category-filter-v2",
+		defaultValue: true,
 	},
 	css: () => `
 		[${HIDDEN_ATTR}] { display: none !important; }

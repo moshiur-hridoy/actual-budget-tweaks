@@ -97,13 +97,9 @@ const workflows = [
 	spendingCalendar,
 ];
 
-const experimental = [
-	experimentalSidebar,
-	experimentalSidebarLayout,
-	budgetMonthHeader,
-	budgetSummaryRow,
-	budgetCategoryFilter,
-];
+const budgetPage = [budgetMonthHeader, budgetSummaryRow, budgetCategoryFilter];
+
+const experimental = [experimentalSidebar, experimentalSidebarLayout];
 
 export const coreScripts = [
 	sidePanel,
@@ -142,6 +138,11 @@ export const scriptSections = [
 		items: workflows,
 	},
 	{
+		title: "Budget page",
+		description: "Month navigation, comparison, and budget summaries",
+		items: budgetPage,
+	},
+	{
 		title: "Experimental",
 		description: "Early previews of in-progress features",
 		items: experimental,
@@ -160,6 +161,7 @@ export const scripts: Setting<any>[][] = [
 	readability,
 	appearance,
 	workflows,
+	budgetPage,
 	experimental,
 	hiddenScripts,
 ];

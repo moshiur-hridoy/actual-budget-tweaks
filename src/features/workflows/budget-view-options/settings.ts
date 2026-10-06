@@ -48,19 +48,16 @@ export function openBudgetSettings(): void {
 					heading: "Summary",
 					settings: [budgetCardStyling, budgetTotalsLabelStyling, showDailyAvailable] as Setting[],
 				},
+				{
+					heading: "Budget page",
+					settings: [budgetMonthHeader, budgetSummaryRow, budgetCategoryFilter] as Setting[],
+				},
 			],
 		},
 		{
 			value: "insights",
 			label: "Insights",
 			groups: [{ settings: [templatePlan, nextMonthCoverageMethod] as Setting[] }],
-		},
-		{
-			value: "experimental",
-			label: "Experimental",
-			groups: [
-				{ settings: [budgetMonthHeader, budgetSummaryRow, budgetCategoryFilter] as Setting[] },
-			],
 		},
 	];
 

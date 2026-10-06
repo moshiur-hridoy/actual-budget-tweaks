@@ -7,7 +7,7 @@ import { Page, matchesPage } from "@lib/utilities/pages";
 import { mountToNodeWithReturn } from "@lib/utilities/svelte";
 import { unmount } from "svelte";
 import MonthMeta from "./MonthMeta.svelte";
-import SummaryRow from "./SummaryRow.svelte";
+import SummaryRow from "./SummaryRowV2.svelte";
 import { markSheetsStale, sheetsInMutations } from "@features/readability/category-progress/cells";
 import { summaryState } from "./state.svelte";
 
@@ -22,8 +22,9 @@ const MONTH_META_ATTR = "data-abt-month-meta";
 const CURRENT_MONTH_ATTR = "data-abt-current-month";
 const RESIZING_ATTR = "data-abt-month-count-changing";
 const REFRESH_MS = 250;
-/** Both modes' card height, so switching between them never moves the table. */
-const CARD_HEIGHT = 92;
+/** Sized to the redesigned three-card summary; compact month cards stay shorter. */
+const SUMMARY_CARD_HEIGHT = 92;
+const MONTH_CARD_HEIGHT = 92;
 /** ABT's notes icon, drawn over Actual's notes button so the button itself stays Actual's. */
 const NOTE_MASK = `url("data:image/svg+xml,${encodeURIComponent(
 	icon("note", { size: 24 }).replace("<svg ", '<svg xmlns="http://www.w3.org/2000/svg" '),
@@ -299,14 +300,15 @@ function syncParts(table: HTMLElement): void {
 
 export const budgetSummaryRow = defineSetting({
 	type: "checkbox",
-	label: "Month cards (experimental)",
-	description:
-		"Compact month headers when several months are shown; with one, a full-width row of To Budget, spending, targets, and quick budget actions.",
+	label: "Budget summary cards",
+	description: "Show To Budget, available funds, and spending in a three-card summary row.",
 	icon: "sparkles",
 	group: "Budget",
 	context: {
-		key: "budget-summary-row",
-		defaultValue: false,
+		// See budget-month-header: this deliberately starts the redesigned summary
+		// fresh instead of inheriting a previously saved experimental toggle.
+		key: "budget-summary-row-v2",
+		defaultValue: true,
 	},
 	/*
 	 * Adapter CSS: this restyles Actual's own month cards, which have no class hooks, so the
@@ -348,6 +350,7 @@ export const budgetSummaryRow = defineSetting({
 			container: abt-month-cards / inline-size;
 		}
 		${SUMMARY_CARD} {
+			position: relative;
 			flex-direction: row !important;
 			flex-wrap: nowrap;
 			align-items: stretch !important;
@@ -419,54 +422,37 @@ export const budgetSummaryRow = defineSetting({
 		${SUMMARY_CARD} > :first-child > :last-child button:hover {
 			background: var(--abt-fill-hover) !important;
 		}
-		/* Actual's month menu: Budget Actions covers everything in it. */
-		${SUMMARY_CARD} > :first-child > :last-child > :last-child:not(:first-child),
-		${MONTH_CARD} > :first-child > :last-child > :last-child:not(:first-child) {
+		/* The replacement toolbar owns these actions while it is active. */
+		body:has([data-abt-native-month-header]) ${SUMMARY_CARD} > :first-child > :last-child > :last-child:not(:first-child),
+		body:has([data-abt-native-month-header]) ${MONTH_CARD} > :first-child > :last-child > :last-child:not(:first-child) {
 			display: none !important;
 		}
-		/* Actual's totals and ABT's flow bar: the summary cards cover them. */
+		/* Actual's totals and flow bar are represented in ABT's redesigned summary cards. */
 		${SUMMARY_CARD} > :not(:first-child):not(:last-child):not([${SUMMARY_STATS_ATTR}]) {
 			display: none !important;
 		}
 		/* Each mode's pieces show only in that mode, including the frame before they unmount. */
 		[${SUMMARY_STATS_ATTR}], [${MONTH_META_ATTR}] { display: none; }
 		${SUMMARY_CARD} > [${SUMMARY_STATS_ATTR}] { display: contents; }
-		/* Actual's To Budget, menu and all, is the lead card. */
+		/* Keep Actual's hidden trigger aligned under our hero card for its native over-assigned menu. */
 		${SUMMARY_CARD} > :last-child {
-			position: relative;
+			position: absolute !important;
+			top: 0;
+			left: 0;
+			width: 33.3333%;
+			height: ${SUMMARY_CARD_HEIGHT}px;
+			visibility: hidden !important;
+			pointer-events: none !important;
+		}
+		${SUMMARY_CARD} > [${SUMMARY_STATS_ATTR}] > .sr__card {
 			order: 0;
-			/* Its content's width, from a floor that keeps a small amount from looking cramped and
-			   covers the To Budget/Overbudgeted switch; the Targets card absorbs the row's slack. */
-			flex: 0 0 auto;
-			/* The cards' height, held before they mount. */
+			flex: 1 1 0;
 			box-sizing: border-box;
-			min-height: ${CARD_HEIGHT}px;
-			align-items: flex-start !important;
 			min-width: 200px;
+			min-height: ${SUMMARY_CARD_HEIGHT}px;
 			margin: 0 !important;
-			padding: var(--abt-space-3) var(--abt-space-5) !important;
-			justify-content: center;
-			border: 1px solid var(--abt-panel-border) !important;
-			border-radius: var(--abt-radius);
-			background:
-				linear-gradient(135deg, color-mix(in srgb, var(--color-noticeTextLight) 14%, transparent), transparent 70%),
-				var(--abt-panel-surface) !important;
-		}
-		${SUMMARY_CARD}[data-abt-to-budget-negative] > :last-child {
-			background:
-				linear-gradient(135deg, color-mix(in srgb, var(--color-errorText) 14%, transparent), transparent 70%),
-				var(--abt-panel-surface) !important;
-		}
-		${SUMMARY_CARD} > :last-child > * { margin: 0 !important; }
-		/* Same label colour as the summary cards; the subdued default is faint on the tint. */
-		${SUMMARY_CARD} > :last-child,
-		${SUMMARY_CARD} > :last-child .abt-to-budget-label {
-			color: var(--color-tableHeaderText) !important;
-		}
-		${SUMMARY_CARD} > :last-child *:not([data-abt-summary-more], [data-abt-summary-more] *) {
 			align-items: flex-start !important;
 			text-align: left !important;
-			padding-left: 0 !important;
 		}
 
 		/*
@@ -484,7 +470,7 @@ export const budgetSummaryRow = defineSetting({
 			/* Shared with the single-month row, so switching modes doesn't move the table. */
 			box-sizing: border-box;
 			flex: none !important;
-			height: ${CARD_HEIGHT}px;
+			height: ${MONTH_CARD_HEIGHT}px;
 			padding: var(--abt-space-4) var(--abt-space-3) 0 var(--abt-space-5) !important;
 			container-type: inline-size;
 			overflow: visible !important;

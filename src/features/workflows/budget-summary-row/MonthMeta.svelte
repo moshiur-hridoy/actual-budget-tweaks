@@ -1,5 +1,4 @@
 <script lang="ts">
-	import ActionCard from "./ActionCard.svelte";
 	import Breakdown from "./Breakdown.svelte";
 	import { summaryState } from "./state.svelte";
 	import { cachedTotals, loadMonthTotals, type MonthTotals } from "./totals";
@@ -63,26 +62,8 @@
 	</span>
 	{#if anchor && flow}<Breakdown anchors={[anchor, flow]} {sheet} {totals} />{/if}
 {/if}
-<div class="mm__actions">
-	<ActionCard
-		compact
-		loading={!totals}
-		{sheet}
-		toBudget={totals?.toBudget ?? 0}
-		short={totals?.short ?? []}
-		overIds={totals?.overIds ?? []}
-		overspent={totals?.overspentNow ?? 0}
-	/>
-</div>
 
 <style>
-	/* On the month name's baseline, not centred beside it. */
-	/* The card is a grid (see index.ts); these are its cells for ABT's parts. */
-	.mm__actions {
-		grid-area: 2 / 5;
-		justify-self: end;
-	}
-
 	/*
 	 * Positioned rather than a grid row: it lives in the card's bottom padding, so the card
 	 * keeps the height it shares with the single-month row.

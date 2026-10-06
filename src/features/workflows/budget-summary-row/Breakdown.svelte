@@ -10,42 +10,77 @@
 
 <script lang="ts">
 	import { fmtMoney } from "@lib/utilities/currency";
+	import { onOutsideClick, positionPopover } from "@lib/utilities/popover";
 
-	const {
+	let {
 		anchors,
 		sheet,
 		totals,
+		mode = "hover",
+		open = $bindable(false),
 	}: {
-		/** What opens the popover on hover: Actual's To Budget block, and the month card's bar. */
+		/** Elements that open the breakdown on hover or click. */
 		anchors: Element[];
 		sheet: string;
 		totals: BreakdownTotals;
+		mode?: "hover" | "click";
+		open?: boolean;
 	} = $props();
 
 	const WIDTH = 260;
-
-	// Kept after hiding so the popover fades out in place instead of jumping to 0,0.
-	let at = $state({ top: 0, left: 0 });
-	let open = $state(false);
+	const popoverId = $derived(`abt-budget-breakdown-${sheet}`);
+	let popover = $state<HTMLDivElement | null>(null);
 
 	// The month cards clip overflow and slide with a transform, so the popover lives on <body>.
 	$effect(() => {
-		const show = (e: Event) => {
-			const r = (e.currentTarget as Element).getBoundingClientRect();
-			at = { top: r.bottom + 6, left: r.left };
-			open = true;
-		};
-		const hide = () => (open = false);
-		for (const el of anchors) {
-			el.addEventListener("mouseenter", show);
-			el.addEventListener("mouseleave", hide);
-		}
-		return () => {
+		if (mode === "hover") {
+			const show = () => (open = true);
+			const hide = () => (open = false);
 			for (const el of anchors) {
-				el.removeEventListener("mouseenter", show);
-				el.removeEventListener("mouseleave", hide);
+				el.addEventListener("mouseenter", show);
+				el.addEventListener("mouseleave", hide);
+				el.addEventListener("focusin", show);
+				el.addEventListener("focusout", hide);
 			}
-			hide();
+			return () => {
+				for (const el of anchors) {
+					el.removeEventListener("mouseenter", show);
+					el.removeEventListener("mouseleave", hide);
+					el.removeEventListener("focusin", show);
+					el.removeEventListener("focusout", hide);
+				}
+				hide();
+			};
+		}
+
+		const toggle = () => (open = !open);
+		for (const el of anchors) el.addEventListener("click", toggle);
+		return () => {
+			for (const el of anchors) el.removeEventListener("click", toggle);
+		};
+	});
+
+	$effect(() => {
+		const anchor = anchors[0];
+		if (!open || !anchor || !popover) return;
+		positionPopover(popover, anchor as HTMLElement, { gap: 8 });
+	});
+
+	$effect(() => {
+		const anchor = anchors[0];
+		if (mode !== "click" || !open || !anchor || !popover) return;
+		const onKeydown = (event: KeyboardEvent) => {
+			if (event.key !== "Escape") return;
+			open = false;
+			(anchor as HTMLElement).focus?.();
+		};
+		document.addEventListener("keydown", onKeydown);
+		const stopOutside = onOutsideClick([...(anchors as HTMLElement[]), popover], () => {
+			open = false;
+		});
+		return () => {
+			document.removeEventListener("keydown", onKeydown);
+			stopOutside();
 		};
 	});
 
@@ -62,39 +97,37 @@
 </script>
 
 <div
+	id={popoverId}
 	class="bd abt-popover abt-stack abt-gap-2"
 	class:is-open={open}
-	role="tooltip"
+	class:is-interactive={mode === "click"}
+	role={mode === "click" ? "dialog" : "tooltip"}
+	aria-label={mode === "click" ? "Available funds calculation" : undefined}
+	aria-hidden={!open}
 	use:portal
-	style:top="{at.top}px"
-	style:left="{at.left}px"
+	bind:this={popover}
 	style:width="{WIDTH}px"
 >
+	{#if mode === "click"}<div class="bd__heading">How To Budget is calculated</div>{/if}
 	<div class="bd__line abt-repel">
 		<span>Available funds</span><span class="abt-privacy-number">{fmtMoney(totals.available)}</span>
 	</div>
-	<!-- In the month cards' bar order, with its colours. -->
+	<div class="bd__line abt-repel is-overspent">
+		<span class="bd__term"><span class="bd__operator">−</span>Overspent in {prevMonthName}</span
+		><span class="abt-privacy-number">{fmtMoney(totals.overspent)}</span>
+	</div>
 	<div class="bd__line abt-repel">
-		<span class="abt-cluster abt-gap-3"><i class="bd__dot is-budgeted"></i>Budgeted</span><span
-			class="abt-privacy-number">−{fmtMoney(totals.budgeted)}</span
+		<span class="bd__term"><span class="bd__operator">−</span>Budgeted</span><span
+			class="abt-privacy-number">{fmtMoney(totals.budgeted)}</span
 		>
 	</div>
-	{#if totals.overspent}
-		<div class="bd__line abt-repel is-bad">
-			<span class="abt-cluster abt-gap-3"
-				><i class="bd__dot is-overspent"></i>Overspent in {prevMonthName}</span
-			><span class="abt-privacy-number">−{fmtMoney(totals.overspent)}</span>
-		</div>
-	{/if}
-	{#if totals.nextMonth}
-		<div class="bd__line abt-repel">
-			<span class="abt-cluster abt-gap-3"><i class="bd__dot is-next"></i>For next month</span><span
-				class="abt-privacy-number">−{fmtMoney(totals.nextMonth)}</span
-			>
-		</div>
-	{/if}
+	<div class="bd__line abt-repel">
+		<span class="bd__term"><span class="bd__operator">−</span>For next month</span><span
+			class="abt-privacy-number">{fmtMoney(totals.nextMonth)}</span
+		>
+	</div>
 	<div class="bd__line abt-repel is-total">
-		<span class="abt-cluster abt-gap-3"><i class="bd__dot is-left"></i>To Budget</span><span
+		<span class="bd__term"><span class="bd__operator">=</span>To Budget</span><span
 			class="abt-privacy-number">{fmtMoney(totals.toBudget)}</span
 		>
 	</div>
@@ -106,6 +139,8 @@
 		z-index: 10000;
 		box-sizing: border-box;
 		padding: var(--abt-space-3) var(--abt-space-4);
+		top: 0;
+		left: 0;
 		opacity: 0;
 		pointer-events: none;
 		transform: translateY(-4px);
@@ -119,6 +154,18 @@
 		transform: none;
 	}
 
+	.bd.is-interactive.is-open {
+		pointer-events: auto;
+	}
+
+	.bd__heading {
+		padding-bottom: var(--abt-space-2);
+		border-bottom: 1px solid var(--color-tableBorder);
+		font-size: var(--abt-text-sm);
+		font-weight: 600;
+		color: var(--color-pageText);
+	}
+
 	.bd__line {
 		line-height: 20px;
 		font-size: var(--abt-text-md);
@@ -130,7 +177,7 @@
 		color: var(--color-pageText);
 	}
 
-	.bd__line.is-bad > span:last-child {
+	.bd__line.is-overspent > span:last-child {
 		color: var(--color-errorText);
 	}
 
@@ -141,26 +188,17 @@
 		color: var(--color-pageText);
 	}
 
-	/* The month card bar's colours, so the two read as one key. */
-	.bd__dot {
-		width: 7px;
-		height: 7px;
-		border-radius: 2px;
+	.bd__term {
+		display: inline-flex;
+		align-items: baseline;
+		gap: var(--abt-space-3);
 	}
 
-	.bd__dot.is-budgeted {
-		background: var(--color-sidebarItemAccentSelected);
-	}
-
-	.bd__dot.is-overspent {
-		background: var(--color-errorText);
-	}
-
-	.bd__dot.is-next {
-		background: var(--color-warningText);
-	}
-
-	.bd__dot.is-left {
-		background: color-mix(in srgb, var(--color-pageText) 15%, transparent);
+	.bd__operator {
+		width: 10px;
+		flex: none;
+		text-align: center;
+		font-weight: 700;
+		color: var(--color-pageText);
 	}
 </style>

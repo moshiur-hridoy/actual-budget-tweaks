@@ -25,7 +25,10 @@
 		overIds,
 		overspent,
 		compact = false,
+		menuOnly = false,
 		loading = false,
+		onSettings,
+		toBudgetCard,
 	}: {
 		sheet: string;
 		toBudget: number;
@@ -34,9 +37,19 @@
 		overspent: number;
 		/** The multi-month header's version: one short button and the menu. */
 		compact?: boolean;
+		/** A header overflow trigger with no separate suggested-action card. */
+		menuOnly?: boolean;
 		/** Drawn disabled, at full size, until the month's totals arrive. */
 		loading?: boolean;
+		onSettings?: () => void;
+		toBudgetCard?: () => Element | null;
 	} = $props();
+
+	function nativeToBudgetCard(): Element | null {
+		return (
+			toBudgetCard?.() ?? root?.closest('[data-testid="budget-summary"]')?.lastElementChild ?? null
+		);
+	}
 
 	type Suggestion = {
 		tone: "danger" | "primary" | "quiet";
@@ -107,8 +120,7 @@
 				short: "Fix",
 				amount: -toBudget,
 				sub: "more than you have",
-				run: () =>
-					openToBudgetMenu(root?.closest('[data-testid="budget-summary"]')?.lastElementChild),
+				run: () => openToBudgetMenu(nativeToBudgetCard()),
 			};
 		}
 		if (coverable > 0) {
@@ -202,7 +214,23 @@
 	}
 </script>
 
-{#if compact}
+{#if menuOnly}
+	<div class="ac-header-menu" bind:this={root}>
+		<button
+			type="button"
+			class="abt-btn abt-btn--icon"
+			title="Budget actions"
+			aria-label="Budget actions"
+			aria-haspopup="menu"
+			aria-expanded={menuOpen}
+			disabled={busy || loading}
+			bind:this={moreBtn}
+			onclick={() => (menuOpen = !menuOpen)}
+		>
+			<Icon name="moreVertical" size={18} />
+		</button>
+	</div>
+{:else if compact}
 	<!-- The multi-month header's version: the suggestion's short name, and the menu. -->
 	<div
 		class="ac-compact abt-btn-group abt-btn-group--sm abt-btn-group--divided {toneClass}"
@@ -302,6 +330,20 @@
 				<span class="ac-menu__desc">Bring every red category back to zero</span>
 			</span>
 		</button>
+		{#if toBudget < 0}
+			<button
+				type="button"
+				role="menuitem"
+				class="abt-menu__item"
+				onclick={() => {
+					menuOpen = false;
+					openToBudgetMenu(nativeToBudgetCard());
+				}}
+			>
+				<Icon name="alert" size={15} />
+				<span class="ac-menu__title">Fix over-assigned</span>
+			</button>
+		{/if}
 		<div class="abt-menu__sep"></div>
 		<div class="abt-menu__heading">Set every budget to</div>
 		<button
@@ -349,6 +391,21 @@
 					</span>
 				</button>
 			{/each}
+		{/if}
+		{#if onSettings}
+			<div class="abt-menu__sep"></div>
+			<button
+				type="button"
+				role="menuitem"
+				class="abt-menu__item"
+				onclick={() => {
+					menuOpen = false;
+					onSettings?.();
+				}}
+			>
+				<Icon name="cog" size={15} />
+				<span class="ac-menu__title">Budget settings</span>
+			</button>
 		{/if}
 	</div>
 {/if}
@@ -459,7 +516,7 @@
 		font-size: 12px;
 		color: var(--color-pageTextSubdued);
 		white-space: nowrap;
-			overflow: hidden;
+		overflow: hidden;
 		text-overflow: ellipsis;
 	}
 
@@ -492,6 +549,11 @@
 		position: fixed;
 		z-index: 10000;
 		width: 310px;
+	}
+
+	.ac-header-menu {
+		display: inline-flex;
+		align-items: center;
 	}
 
 	.ac-menu :global(svg) {

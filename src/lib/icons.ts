@@ -130,6 +130,16 @@ const ICONS = {
 		strokeWidth: 1.5,
 		body: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
 	},
+	infoCircle: {
+		viewBox: "0 0 24 24",
+		strokeWidth: 1.75,
+		body: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="11"/><line x1="12" y1="8" x2="12.01" y2="8"/>',
+	},
+	moreVertical: {
+		viewBox: "0 0 24 24",
+		strokeWidth: 2.5,
+		body: '<circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/>',
+	},
 	rsu: {
 		viewBox: "0 0 24 24",
 		strokeWidth: 1.5,
