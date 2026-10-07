@@ -8,6 +8,9 @@ import { sidebarSearch } from "./appearance/sidebar-search";
 import { sidebarSettingsMenu } from "./appearance/sidebar-settings-menu";
 import { sidebarShortcuts } from "./appearance/sidebar-shortcuts";
 import { modernTitlebar } from "./appearance/titlebar";
+import { modernAccountToolbar } from "./appearance/account-toolbar";
+import { modernReconcile } from "./workflows/reconcile";
+import { modernToasts } from "./appearance/toasts";
 import { privacyMode } from "./core/privacy-mode";
 import { releaseNotification } from "./core/release-notification";
 import { scheduleHighlight } from "./core/schedule-highlight";
@@ -30,7 +33,6 @@ import { colorNegativeBalances } from "./readability/color-negative-balances";
 import { colorTransactions } from "./readability/color-transactions";
 import { dimReconciled } from "./readability/dim-reconciled";
 import { highlightUncategorized } from "./readability/highlight-uncategorized";
-import { notificationContrast } from "./readability/notification-contrast";
 import { reportCardBorders } from "./readability/report-card-borders";
 import { showDailyAvailable } from "./readability/show-daily-available";
 import { tagStyling } from "./readability/tag-styling";
@@ -66,7 +68,6 @@ const readability = [
 	colorNegativeBalances,
 	colorTransactions,
 	dimReconciled,
-	notificationContrast,
 	showDailyAvailable,
 	highlightUncategorized,
 	tagStyling,
@@ -78,6 +79,9 @@ const readability = [
 
 const appearance = [
 	modernTitlebar,
+	modernAccountToolbar,
+	modernReconcile,
+	modernToasts,
 	privacyStyle,
 	sidebarRedesign,
 	sidebarIcons,

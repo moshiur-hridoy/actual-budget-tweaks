@@ -96,7 +96,7 @@
 		<Breakdown
 			anchors={infoButton ? [infoButton] : []}
 			{sheet}
-			totals
+			{totals}
 			mode="hover"
 			bind:open={breakdownOpen}
 		/>

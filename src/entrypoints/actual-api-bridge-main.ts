@@ -35,7 +35,7 @@ export default defineUnlistedScript(async () => {
 	}
 
 	document.addEventListener("abt:api:query", (e) => {
-		const { id, table, filter, select } = parseDetail(e);
+		const { id, table, filter, select, calculate, options } = parseDetail(e);
 		if (!id || !table || !accept(id)) return;
 
 		waitForApi(
@@ -43,9 +43,10 @@ export default defineUnlistedScript(async () => {
 				try {
 					let q = window.$q(table);
 					if (filter) q = q.filter(filter);
-					q = q.select(select || "*");
+					if (options) q = q.options(options);
+					q = calculate ? q.calculate(calculate) : q.select(select || "*");
 					const result = await window.$query(q);
-					respond(id, result.data || [], null);
+					respond(id, calculate ? result.data : result.data || [], null);
 				} catch (err) {
 					respond(id, [], String(err));
 				}
@@ -80,6 +81,35 @@ export default defineUnlistedScript(async () => {
 				try {
 					const result = await window.__actionsForMenu[action](args);
 					respond(id, result, null);
+				} catch (err) {
+					respond(id, null, String(err));
+				}
+			},
+			() => respond(id, null, "Actual actions unavailable"),
+		);
+	});
+
+	// Functions can't cross the bridge, so the toast's button and close report back by event.
+	document.addEventListener("abt:api:notify", (e) => {
+		const { id, key, notification, button } = parseDetail(e);
+		if (!id || !key || !notification || !accept(id)) return;
+		const report = (kind) =>
+			document.dispatchEvent(
+				new CustomEvent("abt:api:notify-event", { detail: JSON.stringify({ key, kind }) }),
+			);
+
+		waitForActions(
+			async () => {
+				try {
+					await window.__actionsForMenu.addNotification({
+						notification: {
+							...notification,
+							id: key,
+							onClose: () => report("close"),
+							...(button && { button: { title: button, action: () => report("press") } }),
+						},
+					});
+					respond(id, null, null);
 				} catch (err) {
 					respond(id, null, String(err));
 				}

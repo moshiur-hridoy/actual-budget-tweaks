@@ -91,7 +91,7 @@
 	}
 
 	.mm__flow .is-budgeted {
-		background: var(--color-sidebarItemAccentSelected);
+		background: var(--abt-accent);
 	}
 
 	.mm__flow .is-overspent {
@@ -130,10 +130,10 @@
 		white-space: nowrap;
 		padding: var(--abt-space-1) var(--abt-space-3);
 		border-radius: 999px;
-		background: color-mix(in srgb, var(--color-sidebarItemAccentSelected) 22%, transparent);
-		color: var(--color-sidebarItemAccentSelected);
+		background: color-mix(in srgb, var(--abt-accent) 22%, transparent);
+		color: var(--abt-accent);
 		font-size: var(--abt-text-xs);
-		font-weight: 600;
+		font-weight: 500;
 		letter-spacing: 0.04em;
 		text-transform: uppercase;
 	}

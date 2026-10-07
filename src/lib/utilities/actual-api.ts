@@ -75,18 +75,38 @@ function request<T>(event: string, detail: Record<string, unknown>): Promise<T> 
  */
 export async function query<K extends TableName>(
 	table: K,
-	options?: { filter?: Record<string, unknown>; select?: string[] },
+	options?: {
+		filter?: Record<string, unknown>;
+		/** Field names, or `{ alias: "payee.name" }` for joined fields. */
+		select?: (string | Record<string, string>)[];
+		options?: Record<string, unknown>;
+	},
 ): Promise<ActualTable[K][]>;
 export async function query<T>(
 	table: string,
-	options?: { filter?: Record<string, unknown>; select?: string[] },
+	options?: {
+		filter?: Record<string, unknown>;
+		/** Field names, or `{ alias: "payee.name" }` for joined fields. */
+		select?: (string | Record<string, string>)[];
+		options?: Record<string, unknown>;
+	},
 ): Promise<T>;
 export async function query(
 	table: string,
-	options?: { filter?: Record<string, unknown>; select?: string[] },
+	options?: {
+		filter?: Record<string, unknown>;
+		/** Field names, or `{ alias: "payee.name" }` for joined fields. */
+		select?: (string | Record<string, string>)[];
+		options?: Record<string, unknown>;
+	},
 ): Promise<unknown> {
 	await waitForBudget();
-	return request("abt:api:query", { table, filter: options?.filter, select: options?.select });
+	return request("abt:api:query", {
+		table,
+		filter: options?.filter,
+		select: options?.select,
+		options: options?.options,
+	});
 }
 
 /**
@@ -118,6 +138,70 @@ export async function dispatch<T = unknown>(action: string, args?: unknown): Pro
 	return request("abt:api:dispatch", { action, args });
 }
 
+export interface Toast {
+	type?: "message" | "error" | "warning";
+	title?: string;
+	message: string;
+	/** Preformatted details shown under the message. */
+	pre?: string;
+	sticky?: boolean;
+	/** Milliseconds; Actual's default is 6500. */
+	timeout?: number;
+}
+
+const toastActions = new Map<string, () => unknown>();
+
+function onToastEvent(e: Event) {
+	const { key, kind } = JSON.parse((e as CustomEvent).detail);
+	const action = toastActions.get(key);
+	toastActions.delete(key);
+	if (kind === "press") action?.();
+}
+
+/**
+ * Show one of Actual's own notification toasts, optionally with a button.
+ *
+ * @example
+ * await notify({ message: "Budget copied" }, { title: "Undo", action: () => send("undo") });
+ */
+export async function notify(
+	toast: Toast,
+	button?: { title: string; action: () => unknown },
+): Promise<void> {
+	await waitForBudget();
+	const key = `abt-toast-${++reqId}-${Date.now()}`;
+	if (button) {
+		if (!toastActions.size) document.addEventListener("abt:api:notify-event", onToastEvent);
+		toastActions.set(key, button.action);
+		// Actual only reports manual closes, so forget actions once the toast times out.
+		if (!toast.sticky) setTimeout(() => toastActions.delete(key), (toast.timeout ?? 6500) + 1000);
+	}
+	await request("abt:api:notify", { key, notification: toast, button: button?.title });
+}
+
+/**
+ * Run an aggregate over an Actual table via the API bridge.
+ *
+ * @example
+ * const cleared = await calculate<number>("transactions", { $sum: "$amount" }, {
+ *   filter: { account: id, cleared: true },
+ *   options: { splits: "none" },
+ * });
+ */
+export async function calculate<T = number>(
+	table: string,
+	expression: Record<string, unknown>,
+	opts?: { filter?: Record<string, unknown>; options?: Record<string, unknown> },
+): Promise<T> {
+	await waitForBudget();
+	return request("abt:api:query", {
+		table,
+		filter: opts?.filter,
+		options: opts?.options,
+		calculate: expression,
+	});
+}
+
 /**
  * Set one of Actual's per-budget local prefs so its UI follows live.
  *
@@ -136,7 +220,8 @@ export async function setLocalPref(name: string, value: unknown): Promise<void> 
  * @example
  * navigate("/accounts/" + accountId);
  */
-export function navigate(path: string, options?: Record<string, unknown>): void {
+/** `path` may also be a history step, like -1 to go back. */
+export function navigate(path: string | number, options?: Record<string, unknown>): void {
 	document.dispatchEvent(
 		new CustomEvent("abt:api:navigate", { detail: JSON.stringify({ path, options }) }),
 	);

@@ -1,14 +1,14 @@
+import { markSheetsStale, sheetsInMutations } from "@features/readability/category-progress/cells";
 import { defineSetting } from "@features/types";
 import { isCalendarOpen } from "@features/workflows/spending-calendar";
 import { icon } from "@lib/icons";
-import { watchDom, watchElement } from "@lib/utilities/dom-watcher";
 import { isBulkEditing, onBulkEditEnd } from "@lib/utilities/bulk-edit";
+import { watchDom, watchElement } from "@lib/utilities/dom-watcher";
 import { Page, matchesPage } from "@lib/utilities/pages";
 import { mountToNodeWithReturn } from "@lib/utilities/svelte";
 import { unmount } from "svelte";
 import MonthMeta from "./MonthMeta.svelte";
 import SummaryRow from "./SummaryRowV2.svelte";
-import { markSheetsStale, sheetsInMutations } from "@features/readability/category-progress/cells";
 import { summaryState } from "./state.svelte";
 
 const BUDGET_TABLE = '[data-testid="budget-table"]';
@@ -331,12 +331,6 @@ export const budgetSummaryRow = defineSetting({
 		/* Actual caps the table at its columns' natural width (500px a month); fill the page instead. */
 		[${FULL_WIDTH_ATTR}] { max-width: none !important; }
 
-		/*
-		 * One month shown: its column uses Actual's other-month colour even when it's the current
-		 * month, for contrast. ABT's surfaces are defined from the current-month colour at the
-		 * root, so the summary cards keep theirs.
-		 */
-		[${SINGLE_MONTH_ATTR}] { --color-budgetCurrentMonth: var(--color-budgetOtherMonth); }
 
 		/* Drop the category-column spacer so the card spans the table. */
 		[${SINGLE_MONTH_ATTR}] > :first-child > :first-child { display: none !important; }
@@ -475,16 +469,15 @@ export const budgetSummaryRow = defineSetting({
 			container-type: inline-size;
 			overflow: visible !important;
 		}
-		/* The current month, tinted like its Now tag. */
+		/* The current month, tinted like its Now tag, its border glowing like To Budget's. */
 		${MONTH_CARD}[${CURRENT_MONTH_ATTR}] {
-			border-color: color-mix(in srgb, var(--color-sidebarItemAccentSelected) 40%, transparent) !important;
+			--abt-card-surface: var(--color-budgetCurrentMonth, var(--abt-panel-surface));
+			border-color: transparent !important;
 			background:
-				linear-gradient(
-					135deg,
-					color-mix(in srgb, var(--color-sidebarItemAccentSelected) 14%, transparent),
-					transparent 70%
-				),
-				var(--color-budgetCurrentMonth, var(--abt-panel-surface)) !important;
+				linear-gradient(135deg, color-mix(in srgb, var(--abt-accent) var(--abt-wash), transparent), transparent 70%) padding-box,
+				linear-gradient(var(--abt-card-surface), var(--abt-card-surface)) padding-box,
+				linear-gradient(var(--abt-glow-angle), color-mix(in srgb, var(--abt-accent) var(--abt-glow-strength), transparent), var(--abt-panel-border) var(--abt-glow-reach)) border-box,
+				linear-gradient(var(--abt-card-surface), var(--abt-card-surface)) border-box !important;
 		}
 		/* Header: its title and notes/menu join the row; the collapse toggle has nothing to collapse. */
 		${MONTH_CARD} > :first-child { display: contents !important; }

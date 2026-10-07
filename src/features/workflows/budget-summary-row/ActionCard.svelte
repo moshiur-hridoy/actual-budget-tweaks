@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from "@lib/components/Icon.svelte";
+	import { notify } from "@lib/utilities/actual-api";
 	import { bulkEdit } from "@lib/utilities/bulk-edit";
 	import { fmtMoney } from "@lib/utilities/currency";
 	import { onOutsideClick, positionPopover } from "@lib/utilities/popover";
@@ -67,8 +68,6 @@
 	let menu = $state<HTMLElement | null>(null);
 	let menuOpen = $state(false);
 	let busy = $state(false);
-	let toast = $state<ActionResult | null>(null);
-	let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
 	let templates = $state(false);
 	onMount(() => {
@@ -176,17 +175,16 @@
 	}
 
 	function showToast(result: ActionResult) {
-		toast = result;
-		clearTimeout(toastTimer);
-		// Longer when there are details to read.
-		toastTimer = setTimeout(() => (toast = null), result.detail ? 12000 : 6000);
-	}
-
-	async function undo() {
-		const steps = toast?.undoSteps ?? 0;
-		toast = null;
-		clearTimeout(toastTimer);
-		await undoSteps(steps);
+		void notify(
+			// Longer when there are details to read.
+			{
+				type: result.detail ? "warning" : "message",
+				message: result.message,
+				pre: result.detail,
+				timeout: result.detail ? 12000 : 6000,
+			},
+			result.undoSteps ? { title: "Undo", action: () => undoSteps(result.undoSteps) } : undefined,
+		);
 	}
 
 	function bulk(action: BulkAction) {
@@ -410,20 +408,6 @@
 	</div>
 {/if}
 
-{#if toast}
-	<div class="ac-toast abt-popover abt-stack abt-gap-2" role="status" use:portal>
-		<div class="abt-cluster abt-gap-4">
-			<span>{toast.message}</span>
-			{#if toast.undoSteps}
-				<button type="button" class="abt-btn abt-btn--sm abt-tone-accent" onclick={undo}
-					>Undo</button
-				>
-			{/if}
-		</div>
-		{#if toast.detail}<pre class="ac-toast__detail">{toast.detail}</pre>{/if}
-	</div>
-{/if}
-
 <style>
 	/* The single-month card: a tinted surface whose whole area runs the suggestion. */
 	.ac {
@@ -437,26 +421,49 @@
 		border-color: color-mix(in srgb, var(--color-pageText) 20%, transparent);
 	}
 
-	.ac.is-primary {
-		border-color: color-mix(in srgb, var(--abt-panel-accent) 35%, transparent);
+	/* Washed in the suggestion's colour, the border glowing from the corner like To Budget's. */
+	.ac.is-primary,
+	.ac.is-danger {
+		border-color: transparent;
 		background:
 			linear-gradient(
-				135deg,
-				color-mix(in srgb, var(--abt-panel-accent) 14%, transparent),
-				transparent 70%
-			),
-			var(--abt-panel-surface);
+					135deg,
+					color-mix(in srgb, var(--ac-tone) var(--abt-wash), transparent),
+					transparent 70%
+				)
+				padding-box,
+			linear-gradient(var(--abt-panel-surface), var(--abt-panel-surface)) padding-box,
+			linear-gradient(
+					var(--abt-glow-angle),
+					color-mix(in srgb, var(--ac-tone) var(--abt-glow-strength), transparent),
+					var(--abt-panel-border) var(--abt-glow-reach)
+				)
+				border-box,
+			linear-gradient(var(--abt-panel-surface), var(--abt-panel-surface)) border-box;
+	}
+
+	.ac.is-primary,
+	.ac.is-danger {
+		transition:
+			border-color 0.12s,
+			--abt-glow-angle var(--abt-glow-duration) ease,
+			--abt-glow-reach var(--abt-glow-duration) ease,
+			--abt-glow-strength var(--abt-glow-duration) ease;
+	}
+
+	.ac.is-primary:hover,
+	.ac.is-danger:hover {
+		--abt-glow-angle: 225deg;
+		--abt-glow-reach: 100%;
+		--abt-glow-strength: 75%;
+	}
+
+	.ac.is-primary {
+		--ac-tone: var(--abt-panel-accent);
 	}
 
 	.ac.is-danger {
-		border-color: color-mix(in srgb, var(--color-errorText) 35%, transparent);
-		background:
-			linear-gradient(
-				135deg,
-				color-mix(in srgb, var(--color-errorText) 12%, transparent),
-				transparent 70%
-			),
-			var(--abt-panel-surface);
+		--ac-tone: var(--color-errorText);
 	}
 
 	.ac.is-busy {
@@ -590,26 +597,5 @@
 
 	.ac-menu__pills {
 		margin-left: auto;
-	}
-
-	.ac-toast__detail {
-		max-width: 520px;
-		max-height: 160px;
-		margin: 0;
-		overflow: auto;
-		font: inherit;
-		font-size: var(--abt-text-sm);
-		white-space: pre-wrap;
-		color: var(--abt-muted);
-	}
-
-	.ac-toast {
-		position: fixed;
-		left: 50%;
-		bottom: var(--abt-space-6);
-		z-index: 10000;
-		transform: translateX(-50%);
-		padding: var(--abt-space-3) var(--abt-space-3) var(--abt-space-3) var(--abt-space-5);
-		font-size: 13px;
 	}
 </style>

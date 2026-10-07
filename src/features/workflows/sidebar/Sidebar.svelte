@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { AccountIconData } from "@features/appearance/account-icon-picker";
 	import { loadIconCache } from "@features/appearance/account-icon-picker";
+	import { sidebarSearch } from "@features/appearance/sidebar-search";
+	import { sidebarShortcuts } from "@features/appearance/sidebar-shortcuts";
 	import { setLiveSidebarBudget } from "@features/appearance/sidebar-settings-menu/settings";
 	import { loadCurrency } from "@lib/utilities/currency";
 	import { watchDom } from "@lib/utilities/dom-watcher";
@@ -8,7 +10,7 @@
 	import { Search } from "lucide-svelte";
 	import { onMount } from "svelte";
 	import ShortcutsBar from "../../appearance/sidebar-shortcuts/ShortcutsBar.svelte";
-	import { portal, syncPortalColors } from "./actions/portal";
+	import { portal } from "./actions/portal";
 	import { tipState } from "./actions/tooltip.svelte";
 	import AccountList from "./components/AccountList.svelte";
 	import AccountListSkeleton from "./components/AccountListSkeleton.svelte";
@@ -20,7 +22,6 @@
 	import { invalidateAccountDetail } from "./lib/account-detail";
 	import { loadCurrentBudgetId, loadCurrentBudgetName } from "./lib/budgets";
 	import { LAYOUT_KEY, toLayout, type SidebarLayout } from "./lib/layout";
-	import { applyComputedForeground } from "./lib/contrast";
 	import type { SidebarAccount } from "./lib/data";
 	import {
 		closeAccount,
@@ -136,55 +137,25 @@
 
 	let sidebarEl: HTMLDivElement | undefined = $state();
 
-	// Recompute if the resolved background ever changes (theme switch while
-	// mounted) — DOM-mutation-driven for the same cross-world reason as the
-	// route-active state elsewhere in this feature (see PrimaryNav.svelte).
-	//
-	// Two separate observers are needed: Actual's own native theme swap
-	// rewrites a style element's text content somewhere inside the body
-	// element, which the default childList/subtree watch (scoped to
-	// document.body) already sees. This extension's own Catppuccin theme
-	// system, though, applies its colors via `root.style.setProperty()` on
-	// document.documentElement (the html element) — an *attribute* mutation
-	// on a node that's a body ancestor, not a descendant, so it's outside the
-	// body observer's subtree and invisible to it. Without this second
-	// observer, switching this extension's own custom themes silently left
-	// the sidebar's derived colors stale.
-	$effect(() => {
-		if (!sidebarEl) return;
-		const recompute = () => {
-			applyComputedForeground(sidebarEl!);
-			// Keeps the portaled tooltip/context-menu overlays (see ./portal)
-			// in the same dark/light state as the real sidebar element.
-			syncPortalColors();
-		};
-		const stopBody = watchDom(recompute);
-		const stopRoot = watchDom(recompute, document.documentElement, {
-			attributes: true,
-			attributeFilter: ["style"],
-		});
-		return () => {
-			stopBody();
-			stopRoot();
-		};
-	});
+	// The features' own keys and defaults, so a changed default reaches the Live sidebar too.
+	const { key: SEARCH_KEY, defaultValue: SEARCH_DEFAULT } = sidebarSearch.context;
+	const { key: SHORTCUTS_KEY, defaultValue: SHORTCUTS_DEFAULT } = sidebarShortcuts.context;
 
-	const SEARCH_KEY = "sidebar-search-enabled";
-	const SHORTCUTS_KEY = "sidebar-shortcuts-enabled";
-
-	let shortcutsFeatureEnabled = $state(false);
-	let searchEnabled = $state(false);
+	let shortcutsFeatureEnabled = $state(SHORTCUTS_DEFAULT);
+	let searchEnabled = $state(SEARCH_DEFAULT);
 
 	$effect(() => {
-		getValue<boolean>(SHORTCUTS_KEY, false).then((v) => (shortcutsFeatureEnabled = v));
-		getValue<boolean>(SEARCH_KEY, false).then((v) => (searchEnabled = v));
+		getValue<boolean>(SHORTCUTS_KEY, SHORTCUTS_DEFAULT).then((v) => (shortcutsFeatureEnabled = v));
+		getValue<boolean>(SEARCH_KEY, SEARCH_DEFAULT).then((v) => (searchEnabled = v));
 
 		const onStorageChange = (changes: Record<string, { newValue?: unknown }>, areaName: string) => {
 			if (areaName !== "local") return;
 			if (`local:${SHORTCUTS_KEY}` in changes)
-				shortcutsFeatureEnabled = Boolean(changes[`local:${SHORTCUTS_KEY}`].newValue);
+				shortcutsFeatureEnabled = Boolean(
+					changes[`local:${SHORTCUTS_KEY}`].newValue ?? SHORTCUTS_DEFAULT,
+				);
 			if (`local:${SEARCH_KEY}` in changes)
-				searchEnabled = Boolean(changes[`local:${SEARCH_KEY}`].newValue);
+				searchEnabled = Boolean(changes[`local:${SEARCH_KEY}`].newValue ?? SEARCH_DEFAULT);
 			if (`local:${LAYOUT_KEY}` in changes)
 				layoutMode = toLayout(changes[`local:${LAYOUT_KEY}`].newValue);
 		};

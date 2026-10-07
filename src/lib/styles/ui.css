@@ -32,7 +32,36 @@
 	--abt-accent-text: color-mix(in srgb, var(--abt-accent) 75%, var(--color-pageText));
 	/* The chosen option, as the Live sidebar marks its active item. */
 	--abt-selected-bg: color-mix(in srgb, var(--abt-accent) 15%, transparent);
-	--abt-selected-fg: var(--abt-accent);
+	--abt-selected-fg: var(--abt-accent-text);
+	/* How strongly accent cards (To Budget, current month, suggestions) wash in their colour. */
+	--abt-wash: 14%;
+	--abt-glow-duration: 450ms;
+}
+
+/* An accent card's glowing border: its angle, reach and brightness. Registered so hovering can
+   move and grow it. */
+@property --abt-glow-angle {
+	syntax: "<angle>";
+	inherits: false;
+	initial-value: 135deg;
+}
+
+@property --abt-glow-reach {
+	syntax: "<percentage>";
+	inherits: false;
+	initial-value: 40%;
+}
+
+@property --abt-glow-strength {
+	syntax: "<percentage>";
+	inherits: false;
+	initial-value: 45%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:root {
+		--abt-glow-duration: 0ms;
+	}
 }
 
 /* ── Layout ─────────────────────────────────────────────────────────────── */

@@ -105,7 +105,7 @@ export const BUILTIN_CSS = `:root {
 	--color-checkboxToggleDisabled: var(--ctp-overlay0);
 
 	/* Error */
-	--color-errorBackground: var(--ctp-base);
+	--color-errorBackground: color-mix(in srgb, var(--ctp-red) 16%, var(--ctp-base));
 	--color-errorBorder: var(--ctp-maroon);
 	--color-errorText: var(--ctp-red);
 	--color-errorTextDark: var(--ctp-flamingo);
@@ -188,9 +188,9 @@ export const BUILTIN_CSS = `:root {
 	/* Notices */
 	--color-noticeBackground: var(--ctp-teal);
 	--color-noticeBackgroundDark: var(--ctp-teal);
-	--color-noticeBackgroundLight: var(--ctp-teal);
+	--color-noticeBackgroundLight: color-mix(in srgb, var(--ctp-green) 16%, var(--ctp-base));
 	--color-noticeBorder: var(--ctp-green);
-	--color-noticeText: var(--ctp-text);
+	--color-noticeText: var(--ctp-green);
 	--color-noticeTextDark: var(--ctp-base);
 	--color-noticeTextLight: var(--ctp-green);
 	--color-noticeTextMenu: var(--ctp-teal);
@@ -300,15 +300,15 @@ export const BUILTIN_CSS = `:root {
 	--color-tooltipText: var(--ctp-text);
 
 	/* Upcoming */
-	--color-upcomingBackground: color-mix(in srgb, var(--ctp-mauve), transparent 85%);
+	--color-upcomingBackground: color-mix(in srgb, var(--ctp-mauve) 16%, var(--ctp-base));
 	--color-upcomingBorder: var(--ctp-surface0);
-	--color-upcomingText: var(--ctp-mantle);
+	--color-upcomingText: var(--ctp-mauve);
 
 	/* Warning */
-	--color-warningBackground: var(--ctp-base);
+	--color-warningBackground: color-mix(in srgb, var(--ctp-yellow) 16%, var(--ctp-base));
 	--color-warningBorder: var(--ctp-peach);
 	--color-warningText: var(--ctp-yellow);
-	--color-warningTextDark: var(--ctp-text);
+	--color-warningTextDark: var(--ctp-yellow);
 	--color-warningTextLight: var(--ctp-peach);
 
 	/* Charts */
@@ -339,6 +339,17 @@ export const BUILTIN_CSS = `:root {
 		--color-chartQual8: oklch(from var(--ctp-mauve) l max(c, min(c * 1.5, 0.17)) h);
 		--color-chartQual9: oklch(from var(--ctp-rosewater) l max(c, min(c * 1.5, 0.17)) h);
 	}
+}
+
+/* Actual's sidebar colours negative balances with the page's errorText; follow the sidebar's. */
+a[href^="/accounts"] {
+	--color-errorText: var(--color-sidebarTextFailed);
+}
+
+/* A bank sync provider's "Configured" uses noticeTextDark, meant for text on solid notice pills;
+   here that's the page colour. Configured cards are the ones with a menu button. */
+[data-testid^="bank-sync-provider-"]:has(> div:first-child > button) > div:first-child > div:first-child > span {
+	color: var(--color-noticeTextLight) !important;
 }`;
 
 export function isCommunityTheme(value: string): boolean {
@@ -386,7 +397,7 @@ export function applyPalette(name: string) {
 	for (const [varName, val] of Object.entries(palette.keys)) {
 		setRootProperty(root, varName, val);
 	}
-	applyGlobalCSS(BUILTIN_CSS, TOKENS_STYLE_ID);
+	applyGlobalCSS(BUILTIN_CSS + (palette.css ?? ""), TOKENS_STYLE_ID);
 	editorState.activeTheme = name;
 	applyOverrides(name);
 }

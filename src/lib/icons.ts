@@ -230,6 +230,41 @@ const ICONS = {
 		strokeWidth: 1.5,
 		body: '<path d="M2 10v3a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-3"/><path d="M8 2v8m0 0L5 7m3 3 3-3"/>',
 	},
+	plus: {
+		viewBox: "0 0 24 24",
+		strokeWidth: 1.75,
+		body: '<path d="M5 12h14"/><path d="M12 5v14"/>',
+	},
+	lock: {
+		viewBox: "0 0 24 24",
+		strokeWidth: 1.75,
+		body: '<rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+	},
+	minimize: {
+		viewBox: "0 0 24 24",
+		strokeWidth: 1.75,
+		body: '<polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/>',
+	},
+	maximize: {
+		viewBox: "0 0 24 24",
+		strokeWidth: 1.75,
+		body: '<polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/>',
+	},
+	moreHorizontal: {
+		viewBox: "0 0 24 24",
+		strokeWidth: 2,
+		body: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
+	},
+	listChecks: {
+		viewBox: "0 0 24 24",
+		strokeWidth: 1.75,
+		body: '<path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>',
+	},
+	checkCircle: {
+		viewBox: "0 0 24 24",
+		strokeWidth: 1.75,
+		body: '<circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/>',
+	},
 	bug: {
 		viewBox: "0 0 24 24",
 		strokeWidth: 2.25,
