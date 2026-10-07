@@ -21,7 +21,7 @@
 		},
 		{
 			key: "funded" as const,
-			label: "Assigned",
+			label: "Funded",
 			short: "",
 			count: filterState.counts.funded,
 			empty: "No funded categories",
