@@ -7,6 +7,7 @@ import { budgetCardStyling } from "@features/readability/budget-card-styling";
 import { budgetPageBorders } from "@features/readability/budget-page-borders";
 import { budgetTotalsLabelStyling } from "@features/readability/budget-totals-label-styling";
 import { categoryProgress } from "@features/readability/category-progress";
+import { overspentSpendHighlight } from "@features/readability/overspent-spend-highlight";
 import { showDailyAvailable } from "@features/readability/show-daily-available";
 import type { Setting } from "@features/types";
 import { budgetCategoryFilter } from "@features/workflows/budget-category-filter";
@@ -28,7 +29,12 @@ export function openBudgetSettings(): void {
 			groups: [
 				{
 					heading: "On each category",
-					settings: [categoryTemplateInsights, categoryProgress, balancePills] as Setting[],
+					settings: [
+						categoryTemplateInsights,
+						categoryProgress,
+						balancePills,
+						overspentSpendHighlight,
+					] as Setting[],
 				},
 				{
 					heading: "Colors & icons",
