@@ -120,7 +120,7 @@
 	}
 
 	.sr__card {
-		--abt-pad: var(--abt-space-3) var(--abt-space-5);
+		--abt-pad: var(--abt-space-4) var(--abt-space-6);
 		box-sizing: border-box;
 		display: flex;
 		flex: 1 1 0;
@@ -165,8 +165,8 @@
 	}
 
 	.sr__label {
-		font-size: 12px;
-		line-height: 16px;
+		font-size: 11px;
+		line-height: 14px;
 	}
 
 	.sr__value {
