@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from "@lib/components/Icon.svelte";
+	import RollingNumber from "@lib/components/RollingNumber.svelte";
 	import { fmtMoney } from "@lib/utilities/currency";
 	import Breakdown from "./Breakdown.svelte";
 	import { summaryState } from "./state.svelte";
@@ -52,7 +53,11 @@
 	<div class="sr" bind:this={root}>
 		<div class="sr__card sr__to-budget abt-card abt-stack" data-state={allocationState}>
 			<span class="sr__label abt-label">To Budget</span>
-			<strong class="sr__value abt-num abt-privacy-number">{fmtMoney(monthTotals.toBudget)}</strong>
+			<RollingNumber
+				value={monthTotals.toBudget}
+				resetKey={sheet}
+				class="sr__value abt-num abt-privacy-number"
+			/>
 			<span class="sr__sub">
 				{#if monthTotals.toBudget === 0}
 					{fmtMoney(monthTotals.budgeted)} assigned
@@ -66,8 +71,11 @@
 
 		<div class="sr__card sr__available abt-card abt-stack">
 			<span class="sr__label abt-label">Available fund</span>
-			<strong class="sr__value abt-num abt-privacy-number">{fmtMoney(monthTotals.available)}</strong
-			>
+			<RollingNumber
+				value={monthTotals.available}
+				resetKey={sheet}
+				class="sr__value abt-num abt-privacy-number"
+			/>
 			<span class="sr__sub sr__available-sub">
 				<span class="abt-privacy-number">{fmtMoney(monthTotals.overspent)}</span>
 				overspent in {previousMonthName}
@@ -86,7 +94,11 @@
 
 		<div class="sr__card sr__spent abt-card abt-stack">
 			<span class="sr__label abt-label">Spent</span>
-			<strong class="sr__value abt-num abt-privacy-number">{fmtMoney(monthTotals.spent)}</strong>
+			<RollingNumber
+				value={monthTotals.spent}
+				resetKey={sheet}
+				class="sr__value abt-num abt-privacy-number"
+			/>
 			<span class="sr__sub">
 				{#if spentRemainder >= 0}
 					<span class="sr__positive abt-privacy-number">{fmtMoney(spentRemainder)}</span>
@@ -125,6 +137,11 @@
 
 	.sr__card {
 		--abt-pad: var(--abt-space-4) var(--abt-space-6);
+		--sr-wash-tone: var(--color-pageText);
+		--sr-wash-strength: 0%;
+		--sr-glow-tone: var(--color-pageText);
+		--abt-glow-reach: 0%;
+		--abt-glow-strength: 0%;
 		box-sizing: border-box;
 		display: flex;
 		flex: 1 1 0;
@@ -133,39 +150,52 @@
 		gap: var(--abt-space-2);
 		min-width: 200px;
 		min-height: 92px;
+		border: 1px solid transparent;
+		background:
+			linear-gradient(
+				135deg,
+				color-mix(in srgb, var(--sr-wash-tone) var(--sr-wash-strength), transparent),
+				transparent 74%
+			)
+			padding-box,
+			linear-gradient(var(--abt-panel-surface), var(--abt-panel-surface)) padding-box,
+			linear-gradient(
+				var(--abt-glow-angle),
+				color-mix(in srgb, var(--sr-glow-tone) var(--abt-glow-strength), transparent),
+				var(--abt-panel-border) var(--abt-glow-reach)
+			)
+			border-box,
+			linear-gradient(var(--abt-panel-surface), var(--abt-panel-surface)) border-box;
+		transition:
+			transform 160ms ease,
+			--abt-glow-angle var(--abt-glow-duration) ease,
+			--abt-glow-reach var(--abt-glow-duration) ease,
+			--abt-glow-strength var(--abt-glow-duration) ease;
+	}
+
+	.sr__card:hover {
+		--abt-glow-angle: 225deg;
+		--abt-glow-reach: 100%;
+		--abt-glow-strength: 38%;
+		transform: translateY(-1px);
 	}
 
 	.sr__to-budget {
-		border-color: var(--abt-panel-border);
-		background:
-			linear-gradient(
-				135deg,
-				color-mix(in srgb, var(--color-noticeTextLight) 16%, transparent),
-				transparent 74%
-			),
-			var(--abt-panel-surface);
+		--sr-wash-tone: var(--color-noticeTextLight);
+		--sr-wash-strength: 16%;
+		--sr-glow-tone: var(--color-noticeTextLight);
 	}
 
 	.sr__to-budget[data-state="unassigned"] {
-		border-color: color-mix(in srgb, var(--abt-panel-accent) 35%, var(--abt-panel-border));
-		background:
-			linear-gradient(
-				135deg,
-				color-mix(in srgb, var(--abt-panel-accent) 13%, transparent),
-				transparent 74%
-			),
-			var(--abt-panel-surface);
+		--sr-wash-tone: var(--abt-panel-accent);
+		--sr-wash-strength: 13%;
+		--sr-glow-tone: var(--abt-panel-accent);
 	}
 
 	.sr__to-budget[data-state="over"] {
-		border-color: color-mix(in srgb, var(--color-errorText) 36%, var(--abt-panel-border));
-		background:
-			linear-gradient(
-				135deg,
-				color-mix(in srgb, var(--color-errorText) 13%, transparent),
-				transparent 74%
-			),
-			var(--abt-panel-surface);
+		--sr-wash-tone: var(--color-errorText);
+		--sr-wash-strength: 13%;
+		--sr-glow-tone: var(--color-errorText);
 	}
 
 	.sr__label {
@@ -173,23 +203,23 @@
 		line-height: 14px;
 	}
 
-	.sr__value {
+	:global(.sr__value) {
 		font-size: 17px;
 		line-height: 22px;
 		font-weight: 700;
 		color: var(--color-pageText);
 	}
 
-	.sr__to-budget[data-state="balanced"] .sr__value,
+	.sr__to-budget[data-state="balanced"] :global(.sr__value),
 	.sr__positive {
 		color: var(--color-noticeTextLight);
 	}
 
-	.sr__to-budget[data-state="unassigned"] .sr__value {
+	.sr__to-budget[data-state="unassigned"] :global(.sr__value) {
 		color: var(--abt-panel-accent);
 	}
 
-	.sr__to-budget[data-state="over"] .sr__value,
+	.sr__to-budget[data-state="over"] :global(.sr__value),
 	.sr__negative {
 		color: var(--color-errorText);
 	}
@@ -252,6 +282,18 @@
 	@media (max-width: 760px) {
 		.sr__card {
 			min-width: min(100%, 230px);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.sr__card {
+			transition: none;
+		}
+
+		.sr__card:hover {
+			--abt-glow-reach: 0%;
+			--abt-glow-strength: 0%;
+			transform: none;
 		}
 	}
 </style>

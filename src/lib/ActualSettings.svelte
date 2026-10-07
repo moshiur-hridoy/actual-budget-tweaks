@@ -104,7 +104,7 @@
 		"local:side-panel-persist": null,
 		"local:theme-auto-switch": false,
 		"local:theme-auto-dark": null,
-		"local:theme-auto-light": null,
+		"local:theme-auto-light": "daylight",
 	};
 
 	async function exportSettings() {

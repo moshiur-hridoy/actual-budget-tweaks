@@ -20,14 +20,14 @@ export const themeSelector = defineSetting({
 		if (autoSwitch) {
 			const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
 			const darkKey = (await getValue<string>("theme-auto-dark", DEFAULT_THEME)) as string;
-			const lightKey = (await getValue<string>("theme-auto-light", "latte")) as string;
+			const lightKey = (await getValue<string>("theme-auto-light", "daylight")) as string;
 			const key = isDark ? darkKey : lightKey;
 			await applyThemeByKey(key, ctx.defaultValue as string);
 
 			window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", async (e) => {
 				const k = e.matches
 					? ((await getValue<string>("theme-auto-dark", DEFAULT_THEME)) as string)
-					: ((await getValue<string>("theme-auto-light", "latte")) as string);
+					: ((await getValue<string>("theme-auto-light", "daylight")) as string);
 				await applyThemeByKey(k, ctx.defaultValue as string);
 			});
 			return;

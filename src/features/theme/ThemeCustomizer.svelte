@@ -46,7 +46,7 @@
 
 	let autoSwitch = $state(false);
 	let autoDarkKey = $state(DEFAULT_THEME);
-	let autoLightKey = $state("latte");
+	let autoLightKey = $state("daylight");
 	let systemIsDark = $state(window.matchMedia("(prefers-color-scheme: dark)").matches);
 
 	const mql = window.matchMedia("(prefers-color-scheme: dark)");
@@ -330,7 +330,7 @@
 
 		autoSwitch = await getValue<boolean>("theme-auto-switch", false);
 		autoDarkKey = (await getValue<string>("theme-auto-dark", DEFAULT_THEME)) as string;
-		autoLightKey = (await getValue<string>("theme-auto-light", "latte")) as string;
+		autoLightKey = (await getValue<string>("theme-auto-light", "daylight")) as string;
 
 		if (autoSwitch) {
 			activeThemeKey = systemIsDark ? autoDarkKey : autoLightKey;
