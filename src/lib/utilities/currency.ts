@@ -4,6 +4,8 @@ let currencyCode: string | null = null;
 // Actual's own number format, e.g. "comma-dot" (1,234.56) or "dot-comma" (1.234,56).
 let numberFormat = "comma-dot";
 let currencyScale = 100;
+// Actual's Formatting → Hide decimal places preference is stored as the string "true".
+let hideFraction = false;
 let loaded = false;
 let loadGeneration = 0;
 
@@ -12,16 +14,18 @@ export async function loadCurrency(force = false): Promise<void> {
 	if (force) {
 		currencyCode = null;
 		currencyScale = 100;
+		hideFraction = false;
 		loaded = false;
 	}
 	const generation = ++loadGeneration;
 	try {
 		const rows = await query<{ id: string; value: string }[]>("preferences", {
-			filter: { id: { $oneof: ["defaultCurrencyCode", "numberFormat"] } },
+			filter: { id: { $oneof: ["defaultCurrencyCode", "numberFormat", "hideFraction"] } },
 		});
 		if (generation !== loadGeneration) return;
 		const format = rows?.find((r) => r.id === "numberFormat")?.value;
 		if (format) numberFormat = format;
+		hideFraction = String(rows?.find((r) => r.id === "hideFraction")?.value) === "true";
 		const code = rows?.find((r) => r.id === "defaultCurrencyCode")?.value;
 		if (code && typeof code === "string") {
 			currencyCode = code;
@@ -53,7 +57,7 @@ export function getCurrencyCode(): string {
 export function fmtMoney(cents: number, opts?: { sign?: boolean; short?: boolean }): string {
 	const n = (cents || 0) / currencyScale;
 	const abs = Math.abs(n);
-	const noDecimals = Math.round(currencyScale) === 1;
+	const noDecimals = hideFraction || Math.round(currencyScale) === 1;
 
 	const fmtOpts: Intl.NumberFormatOptions = currencyCode
 		? { style: "currency", currency: currencyCode }
@@ -70,8 +74,8 @@ export function fmtMoney(cents: number, opts?: { sign?: boolean; short?: boolean
 		str =
 			new Intl.NumberFormat(undefined, {
 				...fmtOpts,
-				minimumFractionDigits: 1,
-				maximumFractionDigits: 1,
+				minimumFractionDigits: noDecimals ? 0 : 1,
+				maximumFractionDigits: noDecimals ? 0 : 1,
 			}).format(k) + "k";
 	} else {
 		str = new Intl.NumberFormat(undefined, fmtOpts).format(abs);

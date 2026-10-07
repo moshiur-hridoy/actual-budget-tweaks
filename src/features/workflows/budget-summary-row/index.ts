@@ -3,6 +3,7 @@ import { defineSetting } from "@features/types";
 import { isCalendarOpen } from "@features/workflows/spending-calendar";
 import { icon } from "@lib/icons";
 import { isBulkEditing, onBulkEditEnd } from "@lib/utilities/bulk-edit";
+import { loadCurrency } from "@lib/utilities/currency";
 import { watchDom, watchElement } from "@lib/utilities/dom-watcher";
 import { Page, matchesPage } from "@lib/utilities/pages";
 import { mountToNodeWithReturn } from "@lib/utilities/svelte";
@@ -287,7 +288,17 @@ function sync(): void {
 	observe(table);
 	syncParts(table);
 	// A new table's carousel starts at zero width and slides into place over a few frames.
-	if (fresh) holdCarousel(table);
+	if (fresh) {
+		// Formatting preferences can change while the user is in Actual Settings. Re-read them
+		// when the budget table returns, then re-render the mounted cards with the same setting.
+		void loadCurrency(true).then(() => {
+			if (!table.isConnected || !matchesPage(Page.Budget)) return;
+			for (const sheet of shownSheets(table)) {
+				summaryState.versions[sheet] = (summaryState.versions[sheet] ?? 0) + 1;
+			}
+		});
+		holdCarousel(table);
+	}
 }
 
 /** Marks the mode and mounts its parts; idempotent, so it's safe on every mutation. */
