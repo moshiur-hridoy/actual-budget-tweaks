@@ -40,6 +40,7 @@ import { tagStyling } from "./readability/tag-styling";
 import { headerBorder } from "./readability/top-nav-border";
 import { themeSelector } from "./theme/theme";
 import { themeLoader } from "./theme/themeLoader";
+import { titlebarThemeToggle } from "./theme/titlebar-theme-toggle";
 import type { Setting } from "./types";
 import { budgetCategoryFilter } from "./workflows/budget-category-filter";
 import { budgetMonthHeader } from "./workflows/budget-month-header";
@@ -115,6 +116,7 @@ export const coreScripts = [
 	privacyMode,
 	sidebarSettingsMenu,
 	budgetViewOptions,
+	titlebarThemeToggle,
 ];
 
 export const scriptSections = [

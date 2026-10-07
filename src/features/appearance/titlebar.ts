@@ -8,7 +8,8 @@ import { type IconName, icon } from "@lib/icons";
  * in a spinning wrapper, and the uncategorized link (no tooltip, so unwrapped) and the server
  * status (inside a View) are the text-only buttons.
  */
-const BAR = 'div:has(> div > [data-testid="help-menu-button"])';
+export const titlebarCluster = 'div:has(> div > [data-testid="help-menu-button"])';
+const BAR = titlebarCluster;
 const HELP = `${BAR} > div > [data-testid="help-menu-button"]`;
 const UNCATEGORIZED = `${BAR} > button:not(:has(svg))`;
 const STATUS = `${BAR} > div > div > button:not(:has(svg))`;
