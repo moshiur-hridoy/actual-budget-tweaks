@@ -14,14 +14,14 @@
 		{ key: "all" as const, label: "All", short: "", count: null, empty: "" },
 		{
 			key: "attention" as const,
-			label: "Needs attention",
-			short: "Attention",
+			label: "Overspent",
+			short: "Overspent",
 			count: filterState.counts.attention,
 			empty: "Nothing needs attention",
 		},
 		{
 			key: "funded" as const,
-			label: "Funded",
+			label: "Assigned",
 			short: "",
 			count: filterState.counts.funded,
 			empty: "No funded categories",
